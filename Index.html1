@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Сайт Одного експерементатора</title>
+
+<style>
+body {
+  margin: 0;
+  background: black;
+  color: #00ff00;
+  font-family: monospace;
+  overflow: hidden;
+}
+
+/* MATRIX */
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -2;
+}
+
+/* ТЕКСТ */
+h1 {
+  text-align: center;
+  margin-top: 25vh;
+  font-size: 35px;
+  animation: glow 2s infinite;
+}
+
+@keyframes glow {
+  0% { text-shadow: 0 0 10px #00ff00; }
+  50% { text-shadow: 0 0 25px #ff0000; }
+  100% { text-shadow: 0 0 10px #00ff00; }
+}
+
+p {
+  text-align: center;
+  color: #ff0000;
+}
+
+/* ВОРОНЫ */
+.raven {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  background: black;
+  border: 2px solid #00ff00;
+  border-radius: 50%;
+  z-index: 10;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="matrix"></canvas>
+
+<h1>Сайт Одного експерементатора</h1>
+<p>Водите пальцем по экрану 🦅</p>
+
+<!-- МУЗЫКА -->
+<audio id="bgMusic" loop>
+  <source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+
+/* ЗАПУСК МУЗЫКИ */
+document.body.addEventListener("click", function() {
+  const music = document.getElementById("bgMusic");
+  music.volume = 1;
+  music.play();
+}, { once: true });
+
+/* MATRIX */
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const letters = "01";
+const fontSize = 16;
+const columns = Math.floor(canvas.width / fontSize);
+const drops = Array(columns).fill(1);
+
+function draw() {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#00ff00";
+  ctx.font = fontSize + "px monospace";
+
+  for (let i = 0; i < drops.length; i++) {
+    const text = letters[Math.floor(Math.random() * letters.length)];
+    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975)
+      drops[i] = 0;
+
+    drops[i]++;
+  }
+}
+
+setInterval(draw, 33);
+
+/* 🦅 ВОРОНЫ */
+
+let ravens = [];
+let touches = {};
+
+/* 100 воронов */
+for (let i = 0; i < 100; i++) {
+  let raven = document.createElement("div");
+  raven.className = "raven";
+  raven.style.left = Math.random() * window.innerWidth + "px";
+  raven.style.top = Math.random() * window.innerHeight + "px";
+
+  document.body.appendChild(raven);
+  ravens.push(raven);
+}
+
+/* касания */
+document.addEventListener("pointerdown", e => {
+  touches[e.pointerId] = { x: e.clientX, y: e.clientY };
+});
+
+document.addEventListener("pointermove", e => {
+  if (touches[e.pointerId]) {
+    touches[e.pointerId].x = e.clientX;
+    touches[e.pointerId].y = e.clientY;
+  }
+});
+
+document.addEventListener("pointerup", e => {
+  delete touches[e.pointerId];
+});
+
+/* движение */
+function moveRavens() {
+  const activeTouches = Object.values(touches);
+
+  ravens.forEach((raven, index) => {
+    if (activeTouches.length === 0) return;
+
+    let target = activeTouches[index % activeTouches.length];
+
+    let rect = raven.getBoundingClientRect();
+
+    let dx = target.x - rect.left;
+    let dy = target.y - rect.top;
+
+    raven.style.left = rect.left + dx * 0.02 + "px";
+    raven.style.top = rect.top + dy * 0.02 + "px";
+  });
+
+  requestAnimationFrame(moveRavens);
+}
+
+moveRavens();
+
+</script>
+
+</body>
+</html>
